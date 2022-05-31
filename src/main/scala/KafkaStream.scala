@@ -6,9 +6,11 @@ import org.apache.kafka.streams.{KafkaStreams, StreamsConfig, Topology}
 import java.util.Properties
 
 object KafkaStream {
-
   val WORD_INPUT_TOPIC = "word-input"
   val WORD_OUTPUT_TOPIC = "word-output"
+
+  val NUMBER_INPUT_TOPIC = "number-input"
+  val NUMBER_OUTPUT_TOPIC = "number-output"
 
   def main(args: Array[String]): Unit = {
     val bootstrapServers = sys.env.getOrElse("BOOTSTRAP_SERVERS", ":9092")
@@ -30,13 +32,25 @@ object KafkaStream {
     import org.apache.kafka.streams.scala.ImplicitConversions._
     import org.apache.kafka.streams.scala.serialization.Serdes._
 
-    val source: KStream[String, String] = builder.stream[String, String](WORD_INPUT_TOPIC)
+    val words: KStream[String, String] = builder.stream[String, String](WORD_INPUT_TOPIC)
 
-    val wordsToUpper = source.mapValues(value => {
+    val wordsToUpper = words.mapValues(value => {
       value.toUpperCase
     })
 
+    val numbers: KStream[String, String] = builder.stream[String, String](NUMBER_INPUT_TOPIC)
+
+    def multiply(value: Int) = value match {
+      case v if v > 0 => v * 2
+      case _ => value * (-2)
+    }
+
+    val multiplyNumbers = numbers.mapValues(value =>
+      multiply(value.toInt).toString)
+
     wordsToUpper.to(WORD_OUTPUT_TOPIC)
+    multiplyNumbers.to(NUMBER_OUTPUT_TOPIC)
+
     builder.build()
   }
 
