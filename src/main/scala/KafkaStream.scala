@@ -27,6 +27,8 @@ object KafkaStream {
     stream.start()
   }
 
+  def prefix(negative: Int) = s"negative number: " + negative
+
   def getTopology: Topology = {
     val builder = new StreamsBuilder()
     import org.apache.kafka.streams.scala.ImplicitConversions._
@@ -42,7 +44,7 @@ object KafkaStream {
 
     def multiply(value: Int) = value match {
       case v if v > 0 => v * 2
-      case _ => value * (-2)
+      case _ => prefix(value)
     }
 
     val multiplyNumbers = numbers.mapValues(value =>

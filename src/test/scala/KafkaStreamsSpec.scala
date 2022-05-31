@@ -38,10 +38,10 @@ class KafkaStreamsSpec extends AnyFlatSpec with should.Matchers {
     topology.numberOutputTopic.readKeyValue shouldBe KeyValue.pair(null, "20")
   }
 
-  it should "multiply negative numbers by a number given on command line" in {
+  it should "return prefix for negative numbers" in {
     val topology = helper()
 
     topology.numberInputTopic.pipeInput("-2")
-    topology.numberOutputTopic.readKeyValue shouldBe KeyValue.pair(null, "4")
+    topology.numberOutputTopic.readKeyValue shouldBe KeyValue.pair(null, "negative number: -2")
   }
 }
