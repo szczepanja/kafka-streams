@@ -7,13 +7,16 @@ import java.util.Properties
 
 object KafkaStream {
 
-  val INPUT_TOPIC = "stream-input"
-  val OUTPUT_TOPIC = "stream-output"
+  val WORD_INPUT_TOPIC = "word-input"
+  val WORD_OUTPUT_TOPIC = "word-output"
 
   def main(args: Array[String]): Unit = {
+    val bootstrapServers = sys.env.getOrElse("BOOTSTRAP_SERVERS", ":9092")
+    val appIdConfig = sys.env.getOrElse("APP_ID", "kafka-streams")
+
     val props = new Properties()
-    props.put(StreamsConfig.APPLICATION_ID_CONFIG, "kafka-streams")
-    props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, ":9092")
+    props.put(StreamsConfig.APPLICATION_ID_CONFIG, appIdConfig)
+    props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers)
     props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.getClass)
     props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.getClass)
 
@@ -27,17 +30,13 @@ object KafkaStream {
     import org.apache.kafka.streams.scala.ImplicitConversions._
     import org.apache.kafka.streams.scala.serialization.Serdes._
 
-    val source: KStream[String, String] = builder.stream[String, String](INPUT_TOPIC)
+    val source: KStream[String, String] = builder.stream[String, String](WORD_INPUT_TOPIC)
 
     val wordsToUpper = source.mapValues(value => {
       value.toUpperCase
     })
 
-    val processedValues = wordsToUpper.mapValues(value => {
-      value
-    })
-
-    processedValues.to(OUTPUT_TOPIC)
+    wordsToUpper.to(WORD_OUTPUT_TOPIC)
     builder.build()
   }
 
