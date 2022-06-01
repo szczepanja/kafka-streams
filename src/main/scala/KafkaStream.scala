@@ -13,6 +13,7 @@ object KafkaStream {
   val NUMBER_OUTPUT_TOPIC = "number-output"
 
   def main(args: Array[String]): Unit = {
+
     val bootstrapServers = sys.env.getOrElse("BOOTSTRAP_SERVERS", ":9092")
     val appIdConfig = sys.env.getOrElse("APP_ID", "kafka-streams")
 
