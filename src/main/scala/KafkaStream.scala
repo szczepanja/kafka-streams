@@ -8,11 +8,6 @@ import scopt.OParser
 import java.util.Properties
 
 object KafkaStream {
-  val WORD_INPUT_TOPIC = "word-input"
-  val WORD_OUTPUT_TOPIC = "word-output"
-
-  val NUMBER_INPUT_TOPIC = "number-input"
-  val NUMBER_OUTPUT_TOPIC = "number-output"
 
   def main(args: Array[String]): Unit = {
     OParser.parse(getParser, args, Config()) match {
@@ -26,7 +21,7 @@ object KafkaStream {
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.getClass)
         props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.getClass)
 
-        val topology = getTopology
+        val topology = getTopology(config)
         val stream = new KafkaStreams(topology, props)
         stream.start()
       }
@@ -34,20 +29,20 @@ object KafkaStream {
     }
   }
 
-  def prefix(negative: Int) = s"negative number: " + negative
-
-  def getTopology: Topology = {
+  def getTopology(c: Config): Topology = {
     val builder = new StreamsBuilder()
     import org.apache.kafka.streams.scala.ImplicitConversions._
     import org.apache.kafka.streams.scala.serialization.Serdes._
 
-    val words: KStream[String, String] = builder.stream[String, String](WORD_INPUT_TOPIC)
+    def prefix(negative: Int) = s"negative number: " + negative
+
+    val words: KStream[String, String] = builder.stream[String, String](c.wordsInput)
 
     val wordsToUpper = words.mapValues(value => {
       value.toUpperCase
     })
 
-    val numbers: KStream[String, String] = builder.stream[String, String](NUMBER_INPUT_TOPIC)
+    val numbers: KStream[String, String] = builder.stream[String, String](c.multiplierInput)
 
     def multiply(value: Int) = value match {
       case v if v > 0 => v * 2
@@ -57,8 +52,8 @@ object KafkaStream {
     val multiplyNumbers = numbers.mapValues(value =>
       multiply(value.toInt).toString)
 
-    wordsToUpper.to(WORD_OUTPUT_TOPIC)
-    multiplyNumbers.to(NUMBER_OUTPUT_TOPIC)
+    wordsToUpper.to(c.wordsOutput)
+    multiplyNumbers.to(c.multiplierOutput)
 
     builder.build()
   }
